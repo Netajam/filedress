@@ -46,10 +46,8 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      # --- NEW STEP TO FIX THE ERROR ---
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
-      # --------------------------------
 
       - name: Build binary
         run: cargo build --release --locked --target ${{ matrix.target }}
@@ -100,7 +98,7 @@ jobs:
             if [[ "$artifact_name" == *"windows"* ]]; then
               (cd "$dir" && zip -r "../${artifact_name}.zip" .)
             else
-              (cd "$dir" && tar -czf "../${artifact_name}.tar.gz" .)
+              (cd "$dir" && tar -czf "../${artifact_name}.tar.gz" *)
             fi
           done
       
