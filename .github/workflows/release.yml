@@ -1,112 +1,64 @@
-# .github/workflows/release.yml
+#!/bin/sh
+set -e
 
-name: Rust Release CI
+# --- Configuration ---
+GITHUB_REPO="Netajam/filedress"
+INSTALL_DIR="${HOME}/.local/bin"
+CMD_NAME="filedress"
 
-on:
-  push:
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - 'main'
+# --- Helper Functions ---
+echo_green() { printf "\033[0;32m%s\033[0m\n" "$1"; }
+echo_error() { printf "\033[0;31mError: %s\033[0m\n" "$1" >&2; exit 1; }
 
-defaults:
-  run:
-    shell: bash
+# --- Main Logic ---
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
 
-jobs:
-  build:
-    name: Build for ${{ matrix.os_name }}
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            os_name: Linux
-            target: x86_64-unknown-linux-gnu
-            asset_name: filedress-linux-x86_64
-          - os: windows-latest
-            os_name: Windows
-            target: x86_64-pc-windows-msvc
-            asset_name: filedress-windows-x86_64
-          - os: macos-latest
-            os_name: macOS
-            target: x86_64-apple-darwin
-            asset_name: filedress-macos-x86_64
+case "$os" in
+  linux)
+    case "$arch" in x86_64) ;; *) echo_error "Unsupported architecture: $arch" ;; esac
+    asset_os="linux"
+    ;;
+  darwin)
+    case "$arch" in x86_64 | arm64) ;; *) echo_error "Unsupported architecture: $arch" ;; esac
+    asset_os="macos"
+    ;;
+  *) echo_error "Unsupported OS: $os" ;;
+esac
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+echo "Fetching latest version of ${CMD_NAME}..."
+latest_tag=$(curl -s "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+if [ -z "$latest_tag" ]; then
+  echo_error "Could not fetch the latest release tag. Check repository name and ensure a release exists."
+fi
+echo_green "Latest version is ${latest_tag}"
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+asset_name="${CMD_NAME}-${asset_os}-x86_64.tar.gz"
+download_url="https://github.com/${GITHUB_REPO}/releases/download/${latest_tag}/${asset_name}"
 
-      - name: Add target for cross-compilation
-        run: rustup target add ${{ matrix.target }}
+echo "Downloading from ${download_url}..."
+temp_file=$(mktemp)
+curl -L --progress-bar -o "$temp_file" "$download_url"
 
-      - name: Build binary
-        run: cargo build --release --locked --target ${{ matrix.target }}
+echo "Installing to ${INSTALL_DIR}..."
+mkdir -p "$INSTALL_DIR"
 
-      - name: Create packaging directory
-        run: mkdir -p staging
+# --- THE FIX IS HERE ---
+# Extract just the binary to a temporary location, then move it.
+# This is robust because it doesn't rely on complex tar flags.
+temp_extract_dir=$(mktemp -d)
+tar -xzf "$temp_file" -C "$temp_extract_dir"
+# The file we want is at './filedress', so we find it and move it.
+mv "${temp_extract_dir}/filedress" "${INSTALL_DIR}/"
+# Clean up all temporary files and directories.
+rm "$temp_file"
+rm -rf "$temp_extract_dir"
+# -----------------------
 
-      - name: Stage assets (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          cp target/${{ matrix.target }}/release/filedress staging/
-          cp README.md staging/
-          cp LICENSE staging/
+if ! command -v "${CMD_NAME}" >/dev/null; then
+    echo "Warning: '${INSTALL_DIR}' is not in your PATH."
+    echo "Please add 'export PATH=\"${INSTALL_DIR}:\$PATH\"' to your shell's startup file (e.g., ~/.bashrc)."
+fi
 
-      - name: Stage assets (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cp target/${{ matrix.target }}/release/filedress.exe staging/
-          cp README.md staging/
-          cp LICENSE staging/
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.asset_name }}
-          path: staging/
-          if-no-files-found: error
-
-  create_release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
-      - name: Package downloaded artifacts
-        run: |
-          for dir in artifacts/*; do
-            artifact_name=$(basename "$dir")
-            if [[ "$artifact_name" == *"windows"* ]]; then
-              (cd "$dir" && zip -r "../${artifact_name}.zip" .)
-            else
-              (cd "$dir" && tar -czf "../${artifact_name}.tar.gz" *)
-            fi
-          done
-      
-      - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ github.ref_name }}
-          generate_release_notes: true
-          files: |
-            artifacts/*.zip
-            artifacts/*.tar.gz
+echo_green "${CMD_NAME} installed successfully!"
+"${INSTALL_DIR}/${CMD_NAME}" --version
