@@ -43,16 +43,16 @@ curl -L --progress-bar -o "$temp_file" "$download_url"
 echo "Installing to ${INSTALL_DIR}..."
 mkdir -p "$INSTALL_DIR"
 
-# --- THE FIX IS HERE ---
-# Extract just the binary to a temporary location, then move it.
-# This is robust because it doesn't rely on complex tar flags.
 temp_extract_dir=$(mktemp -d)
 tar -xzf "$temp_file" -C "$temp_extract_dir"
-# The file we want is at './filedress', so we find it and move it.
 mv "${temp_extract_dir}/filedress" "${INSTALL_DIR}/"
-# Clean up all temporary files and directories.
 rm "$temp_file"
 rm -rf "$temp_extract_dir"
+
+# --- THE FIX IS HERE ---
+# Add the execute permission to the installed binary.
+echo "Setting execute permission..."
+chmod +x "${INSTALL_DIR}/${CMD_NAME}"
 # -----------------------
 
 if ! command -v "${CMD_NAME}" >/dev/null; then
@@ -61,4 +61,5 @@ if ! command -v "${CMD_NAME}" >/dev/null; then
 fi
 
 echo_green "${CMD_NAME} installed successfully!"
+# This final verification step will now work.
 "${INSTALL_DIR}/${CMD_NAME}" --version
