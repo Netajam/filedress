@@ -6,7 +6,7 @@ A fast, cross-platform command-line tool written in Rust to manage file headers 
 
 ## Why use `filedress`?
 
-In large projects, especially those using modern frameworks (like SvelteKit, Next.js, etc.), you often end up with many files having the same name (e.g., `+page.svelte`, `index.js`, `__init__.py`). When you have several of these files open, it can be hard to know which one you're looking at.
+In large projects, especially those using modern frameworks (like SvelteKit, Next.js, etc.), you often end up with many files having the same name (e.g., `+page.svelte`, `index.js`). When you have several of these files open, it can be hard to know which one you're looking at.
 
 `filedress` solves this by adding a simple, machine-readable path comment to the top of each file, giving you immediate context.
 
@@ -17,7 +17,7 @@ import { ... }
 
 ## Installation
 
-### One-Liner Install (Linux & macOS)
+### For Linux & macOS (in Bash or Zsh)
 
 You can install `filedress` with a single command. This script will automatically detect your operating system, download the correct binary from the latest GitHub release, and install it to `~/.local/bin`.
 
@@ -28,9 +28,20 @@ curl -sSfL https://Netajam.github.io/filedress/install.sh | sh
 
 ---
 
+### For Windows (in PowerShell)
+
+Open PowerShell and run the following command. This will download and install the latest `filedress.exe` to a user-specific directory and add it to your PATH.
+
+```powershell
+iwr https://Netajam.github.io/filedress/install.ps1 -useb | iex
+```
+> **Note:** You must open a **new** PowerShell or Command Prompt window after the installation is complete for the `filedress` command to be available.
+
+---
+
 ### Other Installation Methods
 
-#### From Release Binaries (Windows, Linux, macOS)
+#### From Release Binaries (Manual)
 
 If you prefer to install manually:
 1.  Go to the [**Releases page**](https://github.com/Netajam/filedress/releases).
