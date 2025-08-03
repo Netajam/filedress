@@ -8,7 +8,7 @@ mod cli;
 mod commands;
 mod file_utils;
 
-use cli::{Cli, Commands};
+use cli::{Cli};
 use commands::handle_command;
 
 fn main() -> Result<()> {

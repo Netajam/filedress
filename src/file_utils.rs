@@ -2,25 +2,7 @@
 
 //! Contains helper functions for file discovery and comment style detection.
 
-use std::path::{Path, PathBuf};
-use walkdir::{DirEntry, WalkDir};
-
-/// Returns an iterator over files in a directory that match the given extensions.
-pub fn get_files<'a>(
-    dir: &'a Path,
-    exts: &'a [String],
-) -> impl Iterator<Item = DirEntry> + 'a {
-    WalkDir::new(dir)
-        .into_iter()
-        .filter_map(|e| e.ok()) // Ignore permission errors, etc.
-        .filter(move |e| {
-            e.file_type().is_file()
-                && e.path()
-                    .extension()
-                    .and_then(|s| s.to_str())
-                    .map_or(false, |s| exts.contains(&s.to_string()))
-        })
-}
+use std::path::{Path};
 
 /// Determines the correct single-line and multi-line comment syntax for a file.
 /// Returns a tuple of (line_comment_prefix, block_comment_suffix).
