@@ -1,0 +1,107 @@
+# .github/workflows/release.yml
+
+name: Rust Release CI
+
+# This workflow runs only when you push a tag that starts with 'v' (e.g., v1.0.0, v1.1.0)
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Set default shell to bash for all jobs for consistency
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Job to build the application for different platforms
+  build_and_upload:
+    name: Build for ${{ matrix.os_name }}
+    runs-on: ${{ matrix.os }}
+    
+    # The build matrix defines the different environments to run on
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os_name: Linux
+            target: x86_64-unknown-linux-gnu
+            asset_name: filedress-linux-x86_64.tar.gz
+          - os: windows-latest
+            os_name: Windows
+            target: x86_64-pc-windows-msvc
+            asset_name: filedress-windows-x86_64.zip
+          - os: macos-latest
+            os_name: macOS
+            target: x86_64-apple-darwin
+            asset_name: filedress-macos-x86_64.tar.gz
+
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Rust and cache dependencies for faster builds
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # 3. Build the application in release mode
+      - name: Build binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      # 4. Package the binary, README, and LICENSE into an archive
+      - name: Package for Linux and macOS
+        if: runner.os != 'Windows'
+        run: |
+          # The -C flag is important to control the directory structure inside the archive
+          tar -czf ${{ matrix.asset_name }} \
+            -C target/${{ matrix.target }}/release filedress \
+            -C . README.md LICENSE
+
+      - name: Package for Windows
+        if: runner.os == 'Windows'
+        run: |
+          # Windows uses .exe and PowerShell for zipping
+          powershell Compress-Archive `
+            -Path target/${{ matrix.target }}/release/filedress.exe,README.md,LICENSE `
+            -DestinationPath ${{ matrix.asset_name }}
+
+      # 5. Upload the packaged archive as an artifact to be used in the next job
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.asset_name }}
+          path: ${{ matrix.asset_name }}
+
+
+  # Job to create the GitHub Release and attach the built artifacts
+  create_release:
+    name: Create GitHub Release
+    needs: build_and_upload # This job only runs if the build_and_upload job succeeds
+    runs-on: ubuntu-latest
+
+    # IMPORTANT: This permission is required for the action to create a release.
+    permissions:
+      contents: write
+
+    steps:
+      # 1. Download all the artifacts (the zip/tar.gz files) from the previous job
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      # 2. Use a popular and reliable action to create the release
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          # The name of the release will be the tag name (e.g., "v1.0.0")
+          name: Release ${{ github.ref_name }}
+          # Automatically generate the release notes from recent commit history
+          generate_release_notes: true
+          # The files to upload to the release. The wildcard matches all our artifacts.
+          files: artifacts/*/*
