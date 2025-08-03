@@ -1,6 +1,5 @@
 # filedress
 
-![Crates.io](https://img.shields.io/crates/v/filedress.svg?style=flat-square)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/your-username/filedress/rust.yml?branch=main&style=flat-square)
 
 A fast, cross-platform command-line tool written in Rust to manage file headers and comments in your source code.
@@ -16,40 +15,46 @@ In large projects, especially those using modern frameworks (like SvelteKit, Nex
 import { ... }
 ```
 
+## Installation
+
+### One-Liner Install (Linux & macOS)
+
+You can install `filedress` with a single command. This script will automatically detect your operating system, download the correct binary from the latest GitHub release, and install it to `~/.local/bin`.
+
+```sh
+curl -sSfL https://your-username.github.io/filedress/install.sh | sh
+```
+> **Note:** If the `filedress` command isn't available after installation, you may need to open a new terminal or add `~/.local/bin` to your shell's `PATH` by adding `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc` or `~/.zshrc` file.
+
+---
+
+### Other Installation Methods
+
+#### From Release Binaries (Windows, Linux, macOS)
+
+If you prefer to install manually:
+1.  Go to the [**Releases page**](https://github.com/your-username/filedress/releases).
+2.  Download the appropriate `.zip` or `.tar.gz` file for your system.
+3.  Unpack the archive and place the `filedress` (or `filedress.exe`) executable in a directory that is included in your system's `PATH`.
+
+#### From Source (for developers)
+
+If you have the Rust toolchain installed, you can build `filedress` from source:
+1.  **Clone the repository:** `git clone https://github.com/your-username/filedress.git`
+2.  **Navigate into the directory:** `cd filedress`
+3.  **Build the release binary:** `cargo build --release`
+4.  The executable will be located at `target/release/filedress`.
+
 ## Key Features
 
 - **Add/Remove Path Headers**: Add or remove a special `Path:` header to files.
+- **Force Overwrite**: Re-apply headers with new settings using the `--force` flag.
 - **Clean Comments**: Strip all other comments from files while preserving the special path header.
 - **Cross-Platform**: A single, compiled binary that runs on Windows, macOS, and Linux.
 - **Extremely Fast**: Built in Rust for maximum performance, even on large codebases.
 - **Smart Path Control**: Finely control the generated path with the `--up` (`-u`) flag.
 - **Project Presets**: Use `--project` for common tech stacks (`rust`, `web`, `python`, etc.).
 - **Configurable Search**: Limit search depth with the `--depth` (`-d`) flag.
-
-## Installation
-
-### From Crates.io (Recommended)
-
-Once the project is published to crates.io, you can install it easily with `cargo`:
-
-```sh
-cargo install filedress
-```
-
-### From Source
-
-If you want to build it from the source code:
-
-1.  **Clone the repository:**
-    ```sh
-    git clone https://github.com/your-username/filedress.git
-    cd filedress
-    ```
-2.  **Build the release binary:**
-    ```sh
-    cargo build --release
-    ```
-3.  The executable will be located at `target/release/filedress`. You can move this binary to a directory in your system's `PATH` to make it available globally.
 
 ## Usage
 
@@ -76,17 +81,18 @@ filedress <COMMAND> <DIRECTORY> [OPTIONS]
 | `--exts <EXTS>`     |       | Provide a custom, comma-separated list of extensions (e.g., `ts,py`).     |
 | `--up <LEVELS>`     | `-u`  | How many levels up from the target directory to include in the path.      |
 | `--depth <LEVELS>`  | `-d`  | How many levels deep to search for files from the target directory.         |
+| `--force`           | `-f`  | Overwrite an existing `Path:` header during an `add` operation.           |
 | `--help`            | `-h`  | Show the help message.                                                    |
 | `--version`         | `-V`  | Show the version of the tool.                                             |
 
 ### Examples
 
-#### 1. Add Headers Using a Project Preset
+#### 1. Add Headers to All Supported Files
 
-This is the easiest way to get started. It will process all files matching the "web" preset (`.ts`, `.js`, `.svelte`, etc.).
+This is the simplest use case. It will process all known file types.
 
 ```sh
-filedress add ./my-web-project --project web
+filedress add ./my-project
 ```
 
 #### 2. Advanced Path Control with `--up`
@@ -105,34 +111,17 @@ Imagine a file at `project/services/api/v1/user.py`.
   ```
   Resulting path in `user.py`: `# Path: services/api/v1/user.py`
 
-#### 3. Limiting Search Depth with `--depth`
+#### 3. Overwriting Headers with `--force`
 
-To process files *only* in the target directory and not its subdirectories:
-
-```sh
-# This will process 'project/config.py' but not 'project/db/models.py'
-filedress add ./project -d 1 --project python
-```
-
-#### 4. Removing All Headers
-
-To clean up a project and remove all `Path:` headers:
+If you change your mind and want a different path structure, use `-f`.
 
 ```sh
-filedress remove ./my-project --project web
+# First, add with -u 1
+filedress add ./project/services/api/v1 -u 1 --project python
+
+# Now, overwrite with -u 2
+filedress add ./project/services/api/v1 -u 2 --project python -f
 ```
-
-## Available Project Presets
-
-The `--project` flag uses one of the following presets:
-
-| Preset Name | Included Extensions                                    |
-| :---------- | :----------------------------------------------------- |
-| `web`       | `ts`, `js`, `jsx`, `tsx`, `svelte`, `vue`, `html`, `css`, `scss` |
-| `rust`      | `rs`                                                   |
-| `python`    | `py`                                                   |
-| `java`      | `java`, `xml`                                          |
-| `flutter`   | `dart`                                                 |
 
 ## Contributing
 
@@ -140,4 +129,4 @@ Contributions are welcome! Feel free to open an issue for bug reports or feature
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+This project is licensed under the MIT License.
