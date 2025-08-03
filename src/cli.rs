@@ -1,10 +1,8 @@
-// src/cli.rs
-
-use clap::{Parser, Subcommand, ValueEnum}; // <-- Add ValueEnum
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "filedress", version = "1.0", about = "A tool to dress up your source files with path headers.", long_about = None)]
+#[command(name = "filedress", version = "1.0.0", about = "A tool to dress up your source files with path headers.", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -20,8 +18,6 @@ pub enum Commands {
     Clean(Args),
 }
 
-// --- NEW ---
-// Define the available project presets
 #[derive(ValueEnum, Clone, Debug)]
 pub enum ProjectType {
     Rust,
@@ -30,7 +26,6 @@ pub enum ProjectType {
     Java,
     Flutter,
 }
-// -----------
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -38,7 +33,6 @@ pub struct Args {
     #[arg(required = true)]
     pub directory: PathBuf,
 
-    // --- MODIFIED ---
     /// A preset for common project types (e.g., rust, python, web)
     #[arg(long, exclusive = true)]
     pub project: Option<ProjectType>,
@@ -47,9 +41,7 @@ pub struct Args {
     /// Cannot be used with --project
     #[arg(long, value_delimiter = ',', conflicts_with = "project")]
     pub exts: Option<Vec<String>>,
-    // ----------------
 
-    // --- NEW ---
     /// How many levels up from the target directory to include in the path
     #[arg(short, long, default_value_t = 0)]
     pub up: u32,
@@ -57,5 +49,20 @@ pub struct Args {
     /// How many levels deep to search for files
     #[arg(short, long)]
     pub depth: Option<usize>,
-    // -----------
+
+    /// Overwrites an existing path header if one is found
+    #[arg(short, long, default_value_t = false)]
+    pub force: bool,
+}
+impl Default for Args {
+    fn default() -> Self {
+        Args {
+            directory: PathBuf::new(),
+            project: None,
+            exts: None,
+            up: 0,
+            depth: None,
+            force: false,
+        }
+    }
 }

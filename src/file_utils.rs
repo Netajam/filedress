@@ -1,11 +1,6 @@
-// src/file_utils.rs
-
-//! Contains helper functions for file discovery and comment style detection.
-
-use std::path::{Path};
+use std::path::Path;
 
 /// Determines the correct single-line and multi-line comment syntax for a file.
-/// Returns a tuple of (line_comment_prefix, block_comment_suffix).
 pub fn get_comment_style(path: &Path) -> (&'static str, &'static str) {
     match path.extension().and_then(|s| s.to_str()) {
         // C-style, JS-style, etc.
@@ -23,7 +18,24 @@ pub fn get_comment_style(path: &Path) -> (&'static str, &'static str) {
         // PowerShell
         Some("ps1") => ("#", ""),
 
-        // Default case
+        // Default case for unknown files
         _ => ("//", ""),
     }
+}
+
+/// Returns a master list of all file extensions supported by the application.
+pub fn get_all_supported_extensions() -> Vec<String> {
+    vec![
+        // Web & JS
+        "ts", "js", "jsx", "tsx", "svelte", "vue", "html", "css", "scss",
+        // C-style languages
+        "c", "cpp", "h", "hpp", "cs", "go", "java", "rs", "swift", "kt",
+        // Scripting languages
+        "py", "rb", "sh", "bash", "pl", "ps1",
+        // Markup & Config
+        "md", "xml", "yaml", "yml", "toml", "Dockerfile",
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect()
 }

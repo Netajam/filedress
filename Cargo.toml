@@ -1,9 +1,22 @@
 [package]
 name = "filedress"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+description = "A fast, cross-platform CLI tool to manage file headers and comments."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/Netajam/filedress"
+keywords = ["cli", "file-management", "header", "comments", "automation"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "filedress"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5.42", features = ["derive"] }
 walkdir = "2.5.0"
 anyhow = "1.0.98"
+
+[dev-dependencies]
+tempfile = "3.8.1"
