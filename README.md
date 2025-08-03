@@ -1,6 +1,6 @@
 # filedress
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/your-username/filedress/rust.yml?branch=main&style=flat-square)
+![Build Status](https://img.shields.io/github/actions/workflow/status/Netajam/filedress/rust.yml?branch=main&style=flat-square)
 
 A fast, cross-platform command-line tool written in Rust to manage file headers and comments in your source code.
 
@@ -33,7 +33,7 @@ curl -sSfL https://Netajam.github.io/filedress/install.sh | sh
 #### From Release Binaries (Windows, Linux, macOS)
 
 If you prefer to install manually:
-1.  Go to the [**Releases page**](https://github.com/your-username/filedress/releases).
+1.  Go to the [**Releases page**](https://github.com/Netajam/filedress/releases).
 2.  Download the appropriate `.zip` or `.tar.gz` file for your system.
 3.  Unpack the archive and place the `filedress` (or `filedress.exe`) executable in a directory that is included in your system's `PATH`.
 
