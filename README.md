@@ -22,7 +22,7 @@ import { ... }
 You can install `filedress` with a single command. This script will automatically detect your operating system, download the correct binary from the latest GitHub release, and install it to `~/.local/bin`.
 
 ```sh
-curl -sSfL https://your-username.github.io/filedress/install.sh | sh
+curl -sSfL https://Netajam.github.io/filedress/install.sh | sh
 ```
 > **Note:** If the `filedress` command isn't available after installation, you may need to open a new terminal or add `~/.local/bin` to your shell's `PATH` by adding `export PATH="$HOME/.local/bin:$PATH"` to your `~/.bashrc` or `~/.zshrc` file.
 
@@ -40,7 +40,7 @@ If you prefer to install manually:
 #### From Source (for developers)
 
 If you have the Rust toolchain installed, you can build `filedress` from source:
-1.  **Clone the repository:** `git clone https://github.com/your-username/filedress.git`
+1.  **Clone the repository:** `git clone https://github.com/Netajam/filedress.git`
 2.  **Navigate into the directory:** `cd filedress`
 3.  **Build the release binary:** `cargo build --release`
 4.  The executable will be located at `target/release/filedress`.
