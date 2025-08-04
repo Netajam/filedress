@@ -45,6 +45,10 @@ jobs:
           toolchain: stable
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+                  # Create a unique cache key for each OS, toolchain, and Git tag.
+                  # This ensures that every new release gets a completely fresh build.
+                  key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.ref }}
 
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
