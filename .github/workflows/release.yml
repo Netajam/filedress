@@ -4,11 +4,13 @@ name: Rust Release CI
 
 on:
   push:
+    branches:
+      - 'main' # Run on pushes to main to update the cache
     tags:
-      - 'v*'
+      - 'v*'  # Run on tags to create a release
   pull_request:
     branches:
-      - 'main'
+      - 'main' # Run on PRs to test them
 
 defaults:
   run:
@@ -44,39 +46,48 @@ jobs:
         with:
           toolchain: stable
 
-      # --- THIS IS THE FINAL FIX ---
-      # Conditionally cache dependencies.
-      # ONLY cache for pull requests to speed up testing.
-      # DO NOT cache for tagged releases to guarantee a clean build.
-      - name: Cache Rust dependencies (for PRs)
-        if: github.event_name == 'pull_request'
+      # --- THE NEW, CORRECT CACHING STRATEGY ---
+      - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
-      # ---------------------------
+        with:
+          # Use a single, shared key for the 'main' branch cache.
+          # All jobs will restore from this, but only pushes to 'main' will save to it.
+          shared-key: ${{ runner.os }}-${{ matrix.target }}
+          # Only save the cache if we are on the 'main' branch and the event was a 'push'.
+          save-if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+      # ----------------------------------------
 
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
+        
+      # For tagged releases, we still force a clean build of the final binary,
+      # even though we are using the cached dependencies.
+      - name: Clean final binary (for release builds)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          # This removes just the final executable, forcing it to be re-linked
+          # with the correct version string, while keeping the fast dependency builds.
+          rm -f target/${{ matrix.target }}/release/filedress
+          rm -f target/${{ matrix.target }}/release/filedress.exe
 
       - name: Build binary
         run: cargo build --release --locked --target ${{ matrix.target }}
       
-      # ... (rest of the build job is unchanged)
+      # ... (rest of the build job is unchanged) ...
       - name: Create packaging directory
         run: mkdir -p staging
-
       - name: Stage assets (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           cp target/${{ matrix.target }}/release/filedress staging/
           cp README.md staging/
           cp LICENSE staging/
-
       - name: Stage assets (Windows)
         if: runner.os == 'Windows'
         run: |
           cp target/${{ matrix.target }}/release/filedress.exe staging/
           cp README.md staging/
           cp LICENSE staging/
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
