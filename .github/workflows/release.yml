@@ -43,19 +43,23 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-      - name: Cache Rust dependencies
+
+      # --- THIS IS THE FINAL FIX ---
+      # Conditionally cache dependencies.
+      # ONLY cache for pull requests to speed up testing.
+      # DO NOT cache for tagged releases to guarantee a clean build.
+      - name: Cache Rust dependencies (for PRs)
+        if: github.event_name == 'pull_request'
         uses: Swatinem/rust-cache@v2
-        with:
-                  # Create a unique cache key for each OS, toolchain, and Git tag.
-                  # This ensures that every new release gets a completely fresh build.
-                  key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}-${{ github.ref }}
+      # ---------------------------
 
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
 
       - name: Build binary
         run: cargo build --release --locked --target ${{ matrix.target }}
-
+      
+      # ... (rest of the build job is unchanged)
       - name: Create packaging directory
         run: mkdir -p staging
 
@@ -81,6 +85,7 @@ jobs:
           if-no-files-found: error
 
   create_release:
+    # ... (create_release job is unchanged) ...
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
@@ -99,15 +104,9 @@ jobs:
         run: |
           for dir in artifacts/*; do
             artifact_name=$(basename "$dir")
-            if [[ "$artifact_name" == *"windows"* ]]; then
-              # The zip command structure is correct and does not need changing.
-              (cd "$dir" && zip -r "../${artifact_name}.zip" .)
-            else
-              # --- THIS IS THE CORRECTED LINE ---
-              # Instead of archiving '.', we explicitly list the files inside the directory.
-              # This creates a clean archive with no parent directories.
-              (cd "$dir" && tar -czf "../${artifact_name}.tar.gz" *)
-              # ----------------------------------
+            if [[ "$artifact_name" == *"windows"* ]];
+              then (cd "$dir" && zip -r "../${artifact_name}.zip" .);
+              else (cd "$dir" && tar -czf "../${artifact_name}.tar.gz" *);
             fi
           done
       
