@@ -16,6 +16,8 @@ pub enum Commands {
     Remove(Args),
     /// Removes all comments from files, except for the path header
     Clean(Args),
+  /// Copies the content of multiple files to the clipboard
+    Copy(Args),
 }
 
 #[derive(ValueEnum, Clone, Debug)]
