@@ -1,6 +1,6 @@
 [package]
 name = "filedress"
-version = "1.0.5"
+version = "1.0.6"
 edition = "2024"
 description = "A fast, cross-platform CLI tool to manage file headers and comments."
 license = "MIT"
