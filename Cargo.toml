@@ -17,6 +17,7 @@ path = "src/main.rs"
 clap = { version = "4.5.42", features = ["derive"] }
 walkdir = "2.5.0"
 anyhow = "1.0.98"
+arboard = "3.3.0"
 
 [dev-dependencies]
 tempfile = "3.8.1"
