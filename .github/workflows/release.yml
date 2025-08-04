@@ -21,7 +21,6 @@ jobs:
     
     strategy:
       matrix:
-        # ... (matrix is unchanged) ...
         include:
           - os: ubuntu-latest
             os_name: Linux
@@ -40,53 +39,66 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- DEBUG STEP 1: VERIFY SOURCE CODE ---
+      - name: Verify Cargo.toml Version
+        run: |
+          echo "--- Verifying Cargo.toml content ---"
+          grep 'version =' Cargo.toml
+          echo "------------------------------------"
+
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-tooltoolchain@stable
         with:
           toolchain: stable
           
-      # Caching is completely removed to avoid any possible pollution.
+      # Caching is disabled to ensure a clean build.
 
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
 
-      # --- THE BOMBPROOF BUILD SEQUENCE ---
-      # 1. Ensure Cargo.lock is perfectly in sync with Cargo.toml
-      - name: Synchronize Cargo.lock
-        run: cargo update --workspace
-
-      # 2. Force a completely clean build environment
-      - name: Clean previous builds
-        run: cargo clean
-
-      # 3. Build the final binary from a known clean state
       - name: Build binary
-        run: cargo build --release --target ${{ matrix.target }}
-      # ------------------------------------
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
-      # ... (rest of the file is unchanged) ...
+      # --- DEBUG STEP 2: VERIFY BUILT BINARY ---
+      - name: Verify Built Binary Version (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          echo "--- Verifying built binary version ---"
+          ./target/${{ matrix.target }}/release/filedress --version
+          echo "--------------------------------------"
+
+      - name: Verify Built Binary Version (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "--- Verifying built binary version ---"
+          ./target/${{ matrix.target }}/release/filedress.exe --version
+          echo "--------------------------------------"
+
       - name: Create packaging directory
         run: mkdir -p staging
+
       - name: Stage assets (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           cp target/${{ matrix.target }}/release/filedress staging/
           cp README.md staging/
           cp LICENSE staging/
+
       - name: Stage assets (Windows)
         if: runner.os == 'Windows'
         run: |
           cp target/${{ matrix.target }}/release/filedress.exe staging/
           cp README.md staging/
           cp LICENSE staging/
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
           path: staging/
           if-no-files-found: error
+
   create_release:
-    # ... (create_release job is unchanged) ...
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
