@@ -1,22 +1,21 @@
 // src/main.rs
 
-// --- FIX: Add the necessary imports for the binary to work ---
 use anyhow::Result;
 use clap::Parser;
 // -----------------------------------------------------------
 
-// Use the library crate we just defined. The name 'filedress' comes from `[package]` in Cargo.toml.
 use filedress::cli::Cli;
 use filedress::commands::handle_command;
+use filedress::updater::check_for_updates; 
 
 fn main() -> Result<()> {
-    // 1. Parse the command-line arguments
-    // This now works because the `clap::Parser` trait is in scope.
+    // 1. Trigger the (non-blocking) update check at the start.
+    check_for_updates(); 
+    // 2. Parse the command-line arguments
     let cli = Cli::parse();
 
-    // 2. Pass the parsed command to the handler from our library
+    // 3. Pass the parsed command to the handler from our library
     handle_command(&cli.command)?;
 
-    // This now works because `anyhow::Result` is in scope, which provides the error type.
     Ok(())
 }

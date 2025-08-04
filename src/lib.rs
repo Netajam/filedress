@@ -4,3 +4,4 @@
 pub mod cli;
 pub mod commands;
 pub mod file_utils;
+pub mod updater; 
