@@ -4,13 +4,11 @@ name: Rust Release CI
 
 on:
   push:
-    branches:
-      - 'main' # Run on pushes to main to update the cache
     tags:
-      - 'v*'  # Run on tags to create a release
+      - 'v*'
   pull_request:
     branches:
-      - 'main' # Run on PRs to test them
+      - 'main'
 
 defaults:
   run:
@@ -23,6 +21,7 @@ jobs:
     
     strategy:
       matrix:
+        # ... (matrix is unchanged) ...
         include:
           - os: ubuntu-latest
             os_name: Linux
@@ -45,35 +44,27 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-
-      # --- THE NEW, CORRECT CACHING STRATEGY ---
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          # Use a single, shared key for the 'main' branch cache.
-          # All jobs will restore from this, but only pushes to 'main' will save to it.
-          shared-key: ${{ runner.os }}-${{ matrix.target }}
-          # Only save the cache if we are on the 'main' branch and the event was a 'push'.
-          save-if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-      # ----------------------------------------
+          
+      # Caching is completely removed to avoid any possible pollution.
 
       - name: Add target for cross-compilation
         run: rustup target add ${{ matrix.target }}
-        
-      # For tagged releases, we still force a clean build of the final binary,
-      # even though we are using the cached dependencies.
-      - name: Clean final binary (for release builds)
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-        run: |
-          # This removes just the final executable, forcing it to be re-linked
-          # with the correct version string, while keeping the fast dependency builds.
-          rm -f target/${{ matrix.target }}/release/filedress
-          rm -f target/${{ matrix.target }}/release/filedress.exe
 
+      # --- THE BOMBPROOF BUILD SEQUENCE ---
+      # 1. Ensure Cargo.lock is perfectly in sync with Cargo.toml
+      - name: Synchronize Cargo.lock
+        run: cargo update --workspace
+
+      # 2. Force a completely clean build environment
+      - name: Clean previous builds
+        run: cargo clean
+
+      # 3. Build the final binary from a known clean state
       - name: Build binary
-        run: cargo build --release --locked --target ${{ matrix.target }}
-      
-      # ... (rest of the build job is unchanged) ...
+        run: cargo build --release --target ${{ matrix.target }}
+      # ------------------------------------
+
+      # ... (rest of the file is unchanged) ...
       - name: Create packaging directory
         run: mkdir -p staging
       - name: Stage assets (Linux/macOS)
@@ -94,7 +85,6 @@ jobs:
           name: ${{ matrix.asset_name }}
           path: staging/
           if-no-files-found: error
-
   create_release:
     # ... (create_release job is unchanged) ...
     name: Create GitHub Release
