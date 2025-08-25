@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader};
 
 use crate::cli::Args;
 use crate::file_utils::get_comment_style;
-use super::utils::{create_file_walker, generate_display_path, resolve_extensions};
+use super::utils::{create_file_walker, generate_display_path, resolve_extensions}; // THESE IMPORTS MUST BE PRESENT
 
 pub fn add(args: &Args) -> Result<()> {
     println!("Searching in: {:?}", &args.directory);

@@ -1,0 +1,9 @@
+my_new_project/
+    src/
+        main.rs
+        lib.rs
+    tests/
+        integration_test.rs
+    .gitignore
+    Cargo.toml
+    README.md

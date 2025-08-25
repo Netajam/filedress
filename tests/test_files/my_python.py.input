@@ -1,0 +1,11 @@
+# Path: clean_test_root/my_python.py
+import os # Inline comment for os
+def func():
+    # Full-line comment for func
+    x = 10 # Another inline for x
+    print("hello") # print statement
+    # This is
+    # a
+    # multiline comment, which should be treated as full-line comments and removed
+class MyClass:
+    pass

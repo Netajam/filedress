@@ -1,0 +1,23 @@
+// Path: clean_test_root/my_rust.rs
+fn main() { // Inline main comment
+    /*
+    Block comment line 1
+    Block comment line 2
+    */
+    let x = 10; // Inline variable comment
+    println!("Hello, world!"); // Another one
+    // Full line comment
+    /* Another single line block comment */
+}```
+
+**File: `tests/test_files/my_style.css.input`**
+```css
+/* Path: clean_test_root/my_style.css */
+body { /* This is an inline block comment */
+    margin: 0; /* Another inline */
+    /*
+    This is a multi-line
+    block comment
+    */
+    padding: 0;
+}

@@ -1,0 +1,6 @@
+# Path: clean_test_root/string_python.py
+my_string = "This is a string with a # hash inside." # Inline comment here
+another_string = 'Another string with // slashes.'
+comment_start_literal = "# Not a comment, it's a string literal."
+code_with_hash = "some_value" # This is a comment here
+final_line = "value/#here_in_string"

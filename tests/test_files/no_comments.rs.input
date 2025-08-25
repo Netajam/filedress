@@ -1,0 +1,4 @@
+fn func() {
+    let x = 1;
+    return x;
+}

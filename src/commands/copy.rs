@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::cli::Args;
-use super::utils::{create_file_walker, generate_display_path, resolve_extensions};
+use super::utils::{create_file_walker, generate_display_path, resolve_extensions}; // THESE IMPORTS MUST BE PRESENT
 
 /// Handles the 'copy' subcommand logic.
 pub fn copy(args: &Args) -> Result<()> {

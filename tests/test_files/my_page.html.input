@@ -1,0 +1,14 @@
+<!-- Path: clean_test_root/my_page.html -->
+<!DOCTYPE html>
+<html>
+<body>
+    <p>Some code here <!-- Inline HTML comment after code --></p>
+    <!-- This is a full-line HTML comment -->
+    <div>Another element</div>
+    <!--
+        Multi-line
+        HTML comment
+    -->
+    <span>Final span</span>
+</body>
+</html>
