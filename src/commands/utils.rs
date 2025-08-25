@@ -1,4 +1,4 @@
-// src/commands/utils.rs
+// FILE: .\commands\utils.rs
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -47,29 +47,41 @@ pub fn create_file_walker<'a>(
 
 /// Generates the path to be displayed in the header based on the target directory and --up levels.
 pub fn generate_display_path(file_path: &Path, target_dir: &Path, up_levels: u32) -> Result<PathBuf> {
-    // Ensure target_dir is canonicalized to handle `.` or `..` properly
     let absolute_target_dir = target_dir.canonicalize()
         .with_context(|| format!("Failed to canonicalize target directory: {}", target_dir.display()))?;
     let absolute_file_path = file_path.canonicalize()
         .with_context(|| format!("Failed to canonicalize file path: {}", file_path.display()))?;
 
-    let mut effective_root = absolute_target_dir.clone();
-    
-    // Go up 'up_levels' times from the target directory itself
+    // Determine the base path from which to calculate the relative path.
+    // If up_levels is 0, the base is the target_dir itself.
+    // If up_levels > 0, we move up from target_dir's parent.
+    let mut base_for_relative_path = absolute_target_dir.clone();
+
+    // The 'up' logic should go up from the *effective starting point* of the relative path,
+    // not necessarily from the target_dir directly.
+    // The previous logic was causing paths like "config.py" instead of "project_root/config.py"
+    // when `up=0` and `target_dir` was `project_root`.
+    // Let's reset `base_for_relative_path` to the original `target_dir` first,
+    // and then go up `up_levels`. This makes it relative to the directory chosen by `up`.
+
+    // Calculate the effective root to strip from file_path
+    let mut effective_strip_root = absolute_target_dir.clone(); // Start at target_dir
+
     for _ in 0..up_levels {
-        if let Some(parent) = effective_root.parent() {
-            effective_root = parent.to_path_buf();
+        if let Some(parent) = effective_strip_root.parent() {
+            effective_strip_root = parent.to_path_buf();
         } else {
             // Cannot go up further, probably at filesystem root
             break;
         }
     }
 
-    // Strip the effective_root from the file_path.
+    // Strip the `effective_strip_root` from the `absolute_file_path`.
+    // The returned path will be relative to `effective_strip_root`.
     absolute_file_path
-        .strip_prefix(&effective_root)
+        .strip_prefix(&effective_strip_root)
         .map(|p| p.to_path_buf())
-        .with_context(|| format!("Failed to create relative path for {} from base {}", file_path.display(), effective_root.display()))
+        .with_context(|| format!("Failed to create relative path for {} from base {}", file_path.display(), effective_strip_root.display()))
 }
 
 
@@ -134,7 +146,7 @@ mod tests {
 
         let target_dir = project_root.clone(); // `filedress add .` (relative to my_project)
         let path = generate_display_path(&file_path, &target_dir, 0)?;
-        // Expected: src/main.rs (relative to my_project)
+        // Expected: src/main.rs (relative to my_project, if target_dir is my_project)
         assert_eq!(path, PathBuf::from("src").join("main.rs")); 
 
         Ok(())
