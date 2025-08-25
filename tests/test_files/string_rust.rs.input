@@ -1,0 +1,8 @@
+// Path: clean_test_root/string_rust.rs
+fn process() {
+    let my_str = "This string contains // slashes."; // Inline comment for my_str
+    let another_str = "A string with \"quoted\" text and // more slashes.";
+    let third_str = r#"Raw string // with comments"#; // This is a raw string comment
+    // let commented_out_code = "fn main() { /* This is a comment */ }";
+    let x = 10; // Final code line comment
+}

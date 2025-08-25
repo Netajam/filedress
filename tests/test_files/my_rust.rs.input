@@ -1,0 +1,11 @@
+// Path: clean_test_root/my_rust.rs
+fn main() { // Inline main comment
+    /*
+    Block comment line 1
+    Block comment line 2
+    */
+    let x = 10; // Inline variable comment
+    println!("Hello, world!"); // Another one
+    // Full line comment
+    /* Another single line block comment */
+}

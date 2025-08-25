@@ -17,7 +17,13 @@ pub fn add(args: &Args) -> Result<()> {
         let file_path = entry.path();
         let display_path = generate_display_path(file_path, &args.directory, args.up)?;
         let (prefix, suffix) = get_comment_style(file_path);
-        let header = format!("{} Path: {} {}", prefix, display_path.display(), suffix).trim().to_string();
+        
+        // FIX: Only add a space before the suffix if the suffix is not empty.
+        let header = if suffix.is_empty() {
+            format!("{} Path:{}", prefix, display_path.display()).trim().to_string()
+        } else {
+            format!("{} Path: {} {}", prefix, display_path.display(), suffix).trim().to_string()
+        };
 
         let mut first_line = String::new();
         if fs::File::open(file_path).and_then(|f| BufReader::new(f).read_line(&mut first_line)).is_err() {

@@ -1,0 +1,21 @@
+# Path: clean_test_root/complex_python.py
+def process_data(): # Start of function definition
+    """
+    This is a multi-line docstring and should be preserved as code.
+    It can contain # hash symbols within it.
+    """
+    data = {"key": "value"} # Dictionary creation comment
+    # Check for specific condition
+    if "key" in data: # Inline check comment
+        print(f"Data has key: {data['key']}") # Print statement comment
+        # A single line comment
+    
+    # Another block of comments
+    # line 1
+    # line 2
+    
+    url = "https://api.example.com/#anchor"; # URL with hash, this is an inline comment
+    
+    '''This is a single line docstring, also preserved.'''
+    
+    # Final comment line

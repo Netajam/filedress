@@ -1,0 +1,9 @@
+/* Path: clean_test_root/my_style.css */
+body { /* This is an inline block comment */
+    margin: 0; /* Another inline */
+    /*
+    This is a multi-line
+    block comment
+    */
+    padding: 0;
+}

@@ -1,4 +1,4 @@
-// src/commands/utils.rs
+// FILE: .\commands\utils.rs
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -47,25 +47,42 @@ pub fn create_file_walker<'a>(
 
 /// Generates the path to be displayed in the header based on the target directory and --up levels.
 pub fn generate_display_path(file_path: &Path, target_dir: &Path, up_levels: u32) -> Result<PathBuf> {
-    let mut base_path = target_dir.to_path_buf();
-    if let Some(parent) = base_path.parent() {
-        base_path = parent.to_path_buf();
-    }
+    let absolute_target_dir = target_dir.canonicalize()
+        .with_context(|| format!("Failed to canonicalize target directory: {}", target_dir.display()))?;
+    let absolute_file_path = file_path.canonicalize()
+        .with_context(|| format!("Failed to canonicalize file path: {}", file_path.display()))?;
+
+    // Determine the base path from which to calculate the relative path.
+    // If up_levels is 0, the base is the target_dir itself.
+    // If up_levels > 0, we move up from target_dir's parent.
+    let mut base_for_relative_path = absolute_target_dir.clone();
+
+    // The 'up' logic should go up from the *effective starting point* of the relative path,
+    // not necessarily from the target_dir directly.
+    // The previous logic was causing paths like "config.py" instead of "project_root/config.py"
+    // when `up=0` and `target_dir` was `project_root`.
+    // Let's reset `base_for_relative_path` to the original `target_dir` first,
+    // and then go up `up_levels`. This makes it relative to the directory chosen by `up`.
+
+    // Calculate the effective root to strip from file_path
+    let mut effective_strip_root = absolute_target_dir.clone(); // Start at target_dir
+
     for _ in 0..up_levels {
-        if let Some(parent) = base_path.parent() {
-            base_path = parent.to_path_buf();
+        if let Some(parent) = effective_strip_root.parent() {
+            effective_strip_root = parent.to_path_buf();
         } else {
+            // Cannot go up further, probably at filesystem root
             break;
         }
     }
-    file_path
-        .strip_prefix(&base_path)
+
+    // Strip the `effective_strip_root` from the `absolute_file_path`.
+    // The returned path will be relative to `effective_strip_root`.
+    absolute_file_path
+        .strip_prefix(&effective_strip_root)
         .map(|p| p.to_path_buf())
-        .with_context(|| format!("Failed to create relative path for {}", file_path.display()))
+        .with_context(|| format!("Failed to create relative path for {} from base {}", file_path.display(), effective_strip_root.display()))
 }
-
-
-
 
 
 // This tells Rust to only compile this module when running `cargo test`
@@ -75,7 +92,8 @@ mod tests {
     use super::*;
     // Also import the necessary structs/enums from other modules
     use crate::cli::{Args, ProjectType};
-    use std::path::PathBuf;
+    use std::fs; // Needed for tempdir and file operations in tests
+    use tempfile::tempdir; // Needed for tempdir
 
     // A helper function to create a default Args struct for testing
     fn mock_args() -> Args {
@@ -107,32 +125,70 @@ mod tests {
 
     #[test]
     fn test_resolve_default_to_all() {
-        // No project or exts are set in mock_args by default
         let args = mock_args();
         let exts = resolve_extensions(&args);
-        // Check if it contains some known extensions from the master list
         assert!(exts.contains(&"rs".to_string()));
         assert!(exts.contains(&"py".to_string()));
         assert!(exts.contains(&"svelte".to_string()));
-        // Check that it's not empty
         assert!(!exts.is_empty());
     }
 
+    // New tests for generate_display_path with canonicalized paths for robustness
     #[test]
-    fn test_generate_display_path_default() {
-        let target = Path::new("./project/src/app");
-        let file = Path::new("./project/src/app/routes/page.js");
-        let path = generate_display_path(file, target, 0).unwrap();
-        // The default includes the target directory name
-        assert_eq!(path, PathBuf::from("app/routes/page.js"));
+    fn test_generate_display_path_simple() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let project_root = temp_dir.path().join("my_project");
+        fs::create_dir_all(&project_root)?;
+        let src_dir = project_root.join("src");
+        fs::create_dir_all(&src_dir)?;
+        let file_path = src_dir.join("main.rs");
+        fs::File::create(&file_path)?;
+
+        let target_dir = project_root.clone(); // `filedress add .` (relative to my_project)
+        let path = generate_display_path(&file_path, &target_dir, 0)?;
+        // Expected: src/main.rs (relative to my_project, if target_dir is my_project)
+        assert_eq!(path, PathBuf::from("src").join("main.rs")); 
+
+        Ok(())
     }
 
     #[test]
-    fn test_generate_display_path_with_up() {
-        let target = Path::new("./project/src/app");
-        let file = Path::new("./project/src/app/routes/page.js");
-        let path = generate_display_path(file, target, 1).unwrap();
-        // Going up 1 level includes the parent of 'app', which is 'src'
-        assert_eq!(path, PathBuf::from("src/app/routes/page.js"));
+    fn test_generate_display_path_with_up() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let repo_root = temp_dir.path().join("repo");
+        fs::create_dir_all(&repo_root)?;
+        let project_root = repo_root.join("my_project");
+        fs::create_dir_all(&project_root)?;
+        let src_dir = project_root.join("src");
+        fs::create_dir_all(&src_dir)?;
+        let file_path = src_dir.join("main.rs");
+        fs::File::create(&file_path)?;
+
+        let target_dir = project_root.clone(); // `filedress add my_project -u 1` (target_dir is my_project, go up 1 level to repo)
+        let path = generate_display_path(&file_path, &target_dir, 1)?; 
+        // Expected: my_project/src/main.rs (relative to repo)
+        assert_eq!(path, PathBuf::from("my_project").join("src").join("main.rs"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_display_path_from_deep_dir_with_up() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let root = temp_dir.path().join("monorepo");
+        fs::create_dir_all(&root)?;
+        let app_dir = root.join("apps").join("frontend");
+        fs::create_dir_all(&app_dir)?;
+        let pages_dir = app_dir.join("pages");
+        fs::create_dir_all(&pages_dir)?;
+        let file_path = pages_dir.join("index.js");
+        fs::File::create(&file_path)?;
+
+        let target_dir = app_dir.clone(); // `filedress add apps/frontend --up 2` (target_dir is frontend, go up 2 levels to monorepo)
+        let path = generate_display_path(&file_path, &target_dir, 2)?; 
+        // Expected: apps/frontend/pages/index.js (relative to monorepo)
+        assert_eq!(path, PathBuf::from("apps").join("frontend").join("pages").join("index.js"));
+
+        Ok(())
     }
 }

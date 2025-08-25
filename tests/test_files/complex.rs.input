@@ -1,0 +1,16 @@
+// Path: clean_test_root/complex.rs
+/// This is a doc comment, should be removed
+fn do_stuff() {
+    let mut s = "foo"; // Inline comment for s
+    /*
+     * Multi-line block comment
+     * with stars
+     */
+    s = "bar"; // Another inline for s
+    let url = "http://example.com/foo.rs?param=value"; // This URL has //
+    // println!("This line is commented out");
+    /*
+    println!("This block is commented out");
+    */
+    let x = 10; // End of line
+}
