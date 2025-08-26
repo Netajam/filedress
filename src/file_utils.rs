@@ -6,7 +6,7 @@ use std::path::Path; // Only necessary import at the top level
 pub fn get_comment_style(path: &Path) -> (&'static str, &'static str) {
     match path.extension().and_then(|s| s.to_str()) {
         // C-style, JS-style, etc. (mostly // for single line, but block /**/ is common)
-        Some("ts" | "js" | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt") => ("//", ""),
+        Some("ts" | "js" | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt" | "typ") => ("//", ""),
         
         // CSS uses /* */ for all comments
         Some("css" | "scss" | "less") => ("/*", "*/"), // Changed: now returns block comment style
