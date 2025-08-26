@@ -31,7 +31,7 @@ pub fn get_all_supported_extensions() -> Vec<String> {
         // Web & JS
         "ts", "js", "jsx", "tsx", "svelte", "vue", "html", "css", "scss",
         // C-style languages
-        "c", "cpp", "h", "hpp", "cs", "go", "java", "rs", "swift", "kt",
+        "c", "cpp", "h", "hpp", "cs", "go", "java", "rs", "swift", "kt", "typ",
         // Scripting languages
         "py", "rb", "sh", "bash", "pl", "ps1",
         // Markup & Config
