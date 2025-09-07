@@ -6,7 +6,7 @@ use std::path::Path; // Only necessary import at the top level
 pub fn get_comment_style(path: &Path) -> (&'static str, &'static str) {
     match path.extension().and_then(|s| s.to_str()) {
         // C-style, JS-style, etc. (mostly // for single line, but block /**/ is common)
-        Some("ts" | "js" | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt" | "typ") => ("//", ""),
+        Some("ts" | "js" | "jsx" | "tsx" | "c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt" | "typ" | "dart") => ("//", ""),
         
         // CSS uses /* */ for all comments
         Some("css" | "scss" | "less") => ("/*", "*/"), // Changed: now returns block comment style
@@ -31,7 +31,7 @@ pub fn get_all_supported_extensions() -> Vec<String> {
         // Web & JS
         "ts", "js", "jsx", "tsx", "svelte", "vue", "html", "css", "scss",
         // C-style languages
-        "c", "cpp", "h", "hpp", "cs", "go", "java", "rs", "swift", "kt", "typ",
+        "c", "cpp", "h", "hpp", "cs", "go", "java", "rs", "swift", "kt", "typ","dart",
         // Scripting languages
         "py", "rb", "sh", "bash", "pl", "ps1",
         // Markup & Config

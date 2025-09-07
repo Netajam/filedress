@@ -72,7 +72,7 @@ pub fn clean(args: &Args) -> Result<()> {
         let (single_line_prefix_str, block_comment_start_str, block_comment_end_str) = {
             let file_ext = path.extension().and_then(|s| s.to_str());
             match file_ext {
-                Some("c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt") => 
+                Some("c" | "cpp" | "h" | "hpp" | "cs" | "go" | "java" | "rs" | "swift" | "kt" | "dart") => 
                     ("//", "/*", "*/"),
                 Some("js" | "ts" | "jsx" | "tsx") => 
                     ("//", "/*", "*/"),
