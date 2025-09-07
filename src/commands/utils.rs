@@ -55,7 +55,7 @@ pub fn generate_display_path(file_path: &Path, target_dir: &Path, up_levels: u32
     // Determine the base path from which to calculate the relative path.
     // If up_levels is 0, the base is the target_dir itself.
     // If up_levels > 0, we move up from target_dir's parent.
-    let mut base_for_relative_path = absolute_target_dir.clone();
+    let base_for_relative_path = absolute_target_dir.clone();
 
     // The 'up' logic should go up from the *effective starting point* of the relative path,
     // not necessarily from the target_dir directly.

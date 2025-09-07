@@ -2,10 +2,9 @@
 
 use anyhow::Result;
 use std::fs;
-use std::path::Path; 
+ 
 
 use crate::cli::Args;
-use crate::file_utils::get_comment_style;
 use super::utils::{create_file_walker, resolve_extensions};
 
 /// Helper function to remove single-line and inline comments from a line,
