@@ -32,12 +32,33 @@ fn parse_line(line: &str, indent_width: u32) -> Option<(usize, String)> {
     if line.trim().is_empty() {
         return None;
     }
-    let indent_chars = line
+
+    // --- START OF FIX ---
+
+    // 1. Calculate the number of prefix CHARACTERS. This is for calculating the `level`.
+    let prefix_char_count = line
         .chars()
         .take_while(|c| c.is_whitespace() || "│├└─".contains(*c))
         .count();
-    let level = (indent_chars as u32 / indent_width) as usize;
-    let name = line[indent_chars..].trim_start().to_string();
+
+    // 2. Calculate the BYTE length of those exact prefix characters. This is for slicing the string.
+    let prefix_byte_len: usize = line
+        .chars()
+        .take(prefix_char_count) // Take the same number of characters we just counted
+        .map(|c| c.len_utf8())    // Get the byte length of each character
+        .sum();                  // Sum them up to get the total byte length
+
+    // If the entire line was a prefix, there's no name.
+    if prefix_byte_len >= line.len() {
+        return None;
+    }
+    
+    // 3. Use the character count for the level and the byte length for the slice.
+    let level = (prefix_char_count as u32 / indent_width) as usize;
+    let name = line[prefix_byte_len..].trim_start().to_string();
+
+    // --- END OF FIX ---
+
     Some((level, name))
 }
 
