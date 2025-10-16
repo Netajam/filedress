@@ -1,15 +1,18 @@
-# filedress
+# `filedress`
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/Netajam/filedress/rust.yml?branch=main&style=flat-square)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Netajam/filedress/release.yml?branch=main&style=flat-square)](https://github.com/Netajam/filedress/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/Netajam/filedress?style=flat-square)](https://github.com/Netajam/filedress/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
-A fast, cross-platform command-line tool to manage file headers, copy code for LLMs, and scaffold new project structures. Built in Rust for developers who value speed and efficiency.
+A fast, cross-platform command-line tool to manage file headers, clean comments, copy code for LLMs, and scaffold new project structures. Built in Rust for developers who value speed and efficiency.
 
 ## Why use `filedress`?
 
 In large projects, especially those using modern frameworks (like SvelteKit, Next.js, etc.), you often end up with many files having the same name. `filedress` helps you manage your codebase with a suite of powerful tools.
 
 -   **Add Context:** Add a simple, machine-readable path comment to the top of each file, so you always know which file you're editing.
--   **Feed your LLM:** Aggregate the content of multiple files into your clipboard, perfectly formatted to be pasted into large language models like GPT-4, Claude, or Gemini.
+-   **Clean Your Code:** Prepare code for analysis or sharing by intelligently removing all comments, while preserving essential path headers and docstrings.
+-   **Feed your LLM:** Aggregate the content of multiple files into your clipboard (or a file), perfectly formatted to be pasted into large language models like GPT-4, Claude, or Gemini.
 -   **Scaffold Projects:** Instantly create complex directory and file structures from a simple text-based template.
 
 ```typescript
@@ -60,47 +63,50 @@ If you have the Rust toolchain installed, you can build `filedress` from source:
 
 ## Key Features
 
-- **Add/Remove Path Headers**: Add or remove a special `Path:` header to files for context.
-- **Copy for LLMs**: Aggregate and format the content of multiple files into your clipboard, ready for pasting into AI models.
-- **Scaffold Structures**: Instantly create complex file and directory layouts from a simple text template.
-- **Update Notifier**: Automatically checks for new versions and lets you know when an update is available.
-- **Smart Path Control**: Finely control the generated path with the `--up` (`-u`) flag.
-- **Project Presets**: Use `--project` for common tech stacks (`rust`, `web`, `python`, etc.).
-- **Configurable Search**: Limit search depth with the `--depth` (`-d`) flag.
-- **Cross-Platform**: A single, compiled binary that runs on Windows, macOS, and Linux.
+-   **Add/Remove Path Headers**: Add or remove a special `Path:` header to files for context.
+-   **Intelligently Clean Comments**: Remove all single-line, block, and inline comments from your code, while preserving path headers, docstrings, and comments inside string literals.
+-   **Copy for LLMs**: Aggregate and format the content of multiple files into your clipboard, ready for pasting into AI models.
+-   **Flexible Output**: Copy aggregated code directly to your clipboard or save it to a file with the `--output` flag.
+-   **Scaffold Structures**: Instantly create complex file and directory layouts from a simple text template.
+-   **Update Notifier**: Automatically checks for new versions and lets you know when an update is available.
+-   **Smart Path Control**: Finely control the generated path with the `--up` (`-u`) flag.
+-   **Project Presets**: Use `--project` for common tech stacks (`rust`, `web`, `python`, etc.).
+-   **Configurable Search**: Limit search depth with the `--depth` (`-d`) flag.
+-   **Cross-Platform**: A single, compiled binary that runs on Windows, macOS, and Linux.
 
 ## Usage
 
 ### Commands
 
-| Command     | Description                                                                    |
-| :---------- | :----------------------------------------------------------------------------- |
-| `add`       | Adds a `Path:` header to the top of files.                                     |
-| `remove`    | Removes the specific `Path:` header from files.                                |
-| `clean`     | Removes all other comments from files, preserving the `Path:` header.          |
-| `copy`      | Copies the contents of multiple files into the clipboard for use with LLMs.   |
-| `structure` | Creates a file and directory structure from a text-based template.             |
+| Command | Description |
+| :--- | :--- |
+| `add` | Adds a `Path:` header to the top of files. |
+| `remove` | Removes the specific `Path:` header from files. |
+| `clean` | Intelligently removes all comments from files, except for the `Path:` header. |
+| `copy` | Copies the contents of multiple files into the clipboard or a file for use with LLMs. |
+| `structure` | Creates a file and directory structure from a text-based template. |
 
 ### `add` / `remove` / `clean` / `copy` Options
 
 These commands share the same set of file discovery options.
 
-| Option             | Alias | Description                                                               |
-| :----------------- | :---- | :------------------------------------------------------------------------ |
-| `<DIRECTORY>`      |       | **(Required)** The root directory to start searching from.                |
-| `--project <TYPE>` |       | Use a preset group of file extensions (e.g., `rust`, `web`, `python`).   |
-| `--exts <EXTS>`    |       | Provide a custom, comma-separated list of extensions (e.g., `ts,py`).     |
-| `--up <LEVELS>`    | `-u`  | How many levels up from the target directory to include in the path.      |
-| `--depth <LEVELS>` | `-d`  | How many levels deep to search for files from the target directory.         |
-| `--force`          | `-f`  | Overwrite an existing `Path:` header during an `add` operation.           |
+| Option | Alias | Description |
+| :--- | :--- | :--- |
+| `<DIRECTORY>` | | **(Required)** The root directory to start searching from. |
+| `--project <TYPE>` | | Use a preset group of file extensions (e.g., `rust`, `web`, `python`). |
+| `--exts <EXTS>` | | Provide a custom, comma-separated list of extensions (e.g., `ts,py`). |
+| `--up <LEVELS>` | `-u` | How many levels up from the target directory to include in the path. |
+| `--depth <LEVELS>` | `-d` | How many levels deep to search for files from the target directory. |
+| `--force` | `-f` | Overwrite an existing `Path:` header during an `add` operation. |
+| `--output <FILE>` | `-o` | **(For `copy` only)** Write the output to a file instead of the clipboard. |
 
 ### `structure` Options
 
-| Option             | Alias | Description                                                                 |
-| :----------------- | :---- | :-------------------------------------------------------------------------- |
-| `--file <FILE>`    | `-f`  | The input file with the tree structure. Reads from stdin if not provided. |
-| `--directory <DIR>`| `-d`  | The root directory where the structure will be created. Defaults to `.`.    |
-| `--indent <WIDTH>` | `-i`  | The number of spaces that represent one level of indentation.             |
+| Option | Alias | Description |
+| :--- | :--- | :--- |
+| `--file <FILE>` | `-f` | The input file with the tree structure. Reads from stdin if not provided. |
+| `--directory <DIR>` | `-d` | The root directory where the structure will be created. Defaults to `.`. |
+| `--indent <WIDTH>` | `-i` | The number of spaces that represent one level of indentation. |
 
 ---
 
@@ -119,23 +125,61 @@ filedress add ./src/app -u 2 --project python
 filedress add ./src/app -u 3 --project python -f
 ```
 
+### Cleaning Comments
+
+The `clean` command intelligently removes comments while preserving path headers, docstrings, and comments inside string literals.
+
+**Before `clean`:**
+```rust
+// Path: src/utils.rs
+/*
+ * This is a multi-line block comment.
+ * It should be removed.
+ */
+fn calculate() {
+    let result = 1 + 1; // This is an inline comment.
+    let url = "http://example.com"; // Don't touch this!
+    println!("Result: {}", result);
+}
+```
+
+**Run the command:**
+```sh
+filedress clean ./src --project rust
+```
+
+**After `clean`:**
+```rust
+// Path: src/utils.rs
+fn calculate() {
+    let result = 1 + 1;
+    let url = "http://example.com";
+    println!("Result: {}", result);
+}
+```
+
 ### Copying Code for an LLM
 
 ```sh
-# Copy all TypeScript files from the 'src/utils' directory to the clipboard
+# Copy all TypeScript files from 'src/utils' to the clipboard
 filedress copy ./src/utils --exts ts
 
-# The clipboard will contain:
-# FILE: src/utils/api.ts
-# ---
-#
-# // content of api.ts
-#
-# ---
-# FILE: src/utils/helpers.ts
-# ---
-#
-# // content of helpers.ts
+# Or, write the combined content to a file instead
+filedress copy ./src/utils --exts ts -o context.txt
+```
+
+The clipboard or `context.txt` will contain:
+```
+FILE: src/utils/api.ts
+---
+
+// content of api.ts
+
+---
+FILE: src/utils/helpers.ts
+---
+
+// content of helpers.ts
 ```
 
 ### Scaffolding a New Project
@@ -150,7 +194,7 @@ my_app/
     .gitignore
     Cargo.toml
 ```
-You can run:
+You can create this structure instantly:
 ```sh
 # Create the structure in the current directory
 filedress structure -f template.txt
@@ -161,8 +205,8 @@ filedress structure -f template.txt -d ./build
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an issue for bug reports or feature requests, or submit a pull request.
+Contributions are welcome! Please refer to the [**Developer Guide**](DEV.md) for instructions on how to set up the project and submit your changes. Feel free to open an issue for bug reports or feature requests.
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
