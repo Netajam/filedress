@@ -4,7 +4,13 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "filedress", version = "1.0.0", about = "A tool to dress up your source files with path headers.", long_about = None)]
+#[command(
+    name = env!("CARGO_PKG_NAME"),
+    author = env!("CARGO_PKG_AUTHORS"),
+    version = env!("CARGO_PKG_VERSION"),
+    about = env!("CARGO_PKG_DESCRIPTION"),
+    long_about = None
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
