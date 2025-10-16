@@ -1,4 +1,4 @@
-// FILE: .\commands\utils.rs
+// FILE: src/commands/utils.rs
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -52,18 +52,6 @@ pub fn generate_display_path(file_path: &Path, target_dir: &Path, up_levels: u32
     let absolute_file_path = file_path.canonicalize()
         .with_context(|| format!("Failed to canonicalize file path: {}", file_path.display()))?;
 
-    // Determine the base path from which to calculate the relative path.
-    // If up_levels is 0, the base is the target_dir itself.
-    // If up_levels > 0, we move up from target_dir's parent.
-    let base_for_relative_path = absolute_target_dir.clone();
-
-    // The 'up' logic should go up from the *effective starting point* of the relative path,
-    // not necessarily from the target_dir directly.
-    // The previous logic was causing paths like "config.py" instead of "project_root/config.py"
-    // when `up=0` and `target_dir` was `project_root`.
-    // Let's reset `base_for_relative_path` to the original `target_dir` first,
-    // and then go up `up_levels`. This makes it relative to the directory chosen by `up`.
-
     // Calculate the effective root to strip from file_path
     let mut effective_strip_root = absolute_target_dir.clone(); // Start at target_dir
 
@@ -88,14 +76,11 @@ pub fn generate_display_path(file_path: &Path, target_dir: &Path, up_levels: u32
 // This tells Rust to only compile this module when running `cargo test`
 #[cfg(test)]
 mod tests {
-    // Import everything from the parent module (the file itself)
     use super::*;
-    // Also import the necessary structs/enums from other modules
     use crate::cli::{Args, ProjectType};
-    use std::fs; // Needed for tempdir and file operations in tests
-    use tempfile::tempdir; // Needed for tempdir
+    use std::fs;
+    use tempfile::tempdir;
 
-    // A helper function to create a default Args struct for testing
     fn mock_args() -> Args {
         Args {
             directory: PathBuf::from("."),
@@ -104,6 +89,7 @@ mod tests {
             up: 0,
             depth: None,
             force: false,
+            output: None,
         }
     }
 
@@ -133,7 +119,6 @@ mod tests {
         assert!(!exts.is_empty());
     }
 
-    // New tests for generate_display_path with canonicalized paths for robustness
     #[test]
     fn test_generate_display_path_simple() -> Result<()> {
         let temp_dir = tempdir()?;
@@ -144,9 +129,8 @@ mod tests {
         let file_path = src_dir.join("main.rs");
         fs::File::create(&file_path)?;
 
-        let target_dir = project_root.clone(); // `filedress add .` (relative to my_project)
+        let target_dir = project_root.clone();
         let path = generate_display_path(&file_path, &target_dir, 0)?;
-        // Expected: src/main.rs (relative to my_project, if target_dir is my_project)
         assert_eq!(path, PathBuf::from("src").join("main.rs")); 
 
         Ok(())
@@ -164,9 +148,8 @@ mod tests {
         let file_path = src_dir.join("main.rs");
         fs::File::create(&file_path)?;
 
-        let target_dir = project_root.clone(); // `filedress add my_project -u 1` (target_dir is my_project, go up 1 level to repo)
+        let target_dir = project_root.clone();
         let path = generate_display_path(&file_path, &target_dir, 1)?; 
-        // Expected: my_project/src/main.rs (relative to repo)
         assert_eq!(path, PathBuf::from("my_project").join("src").join("main.rs"));
 
         Ok(())
@@ -184,9 +167,8 @@ mod tests {
         let file_path = pages_dir.join("index.js");
         fs::File::create(&file_path)?;
 
-        let target_dir = app_dir.clone(); // `filedress add apps/frontend --up 2` (target_dir is frontend, go up 2 levels to monorepo)
+        let target_dir = app_dir.clone();
         let path = generate_display_path(&file_path, &target_dir, 2)?; 
-        // Expected: apps/frontend/pages/index.js (relative to monorepo)
         assert_eq!(path, PathBuf::from("apps").join("frontend").join("pages").join("index.js"));
 
         Ok(())
