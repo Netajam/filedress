@@ -1,4 +1,4 @@
-// src/cli.rs
+// FILE: src/cli.rs
 
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
@@ -53,6 +53,9 @@ pub struct Args {
     /// Overwrites an existing path header if one is found
     #[arg(short, long, default_value_t = false)]
     pub force: bool,
+    /// Write the output to a file instead of the clipboard
+    #[arg(long, short)]
+    pub output: Option<PathBuf>,
 }
 
 #[derive(Parser, Debug)]
@@ -77,6 +80,7 @@ impl Default for Args {
             up: 0,
             depth: None,
             force: false,
+            output: None, // Add the default for our new field
         }
     }
 }
